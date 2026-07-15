@@ -26,11 +26,8 @@ Requires Node 18.17+ (Node 20+ recommended).
 
 The four case studies and the starter blog post contain `<mark>[EXPAND: ...]</mark>` slots — they render highlighted on the page so unfinished sections are impossible to miss. Replace each with your specifics, or delete the slot. Files:
 
-- `src/content/case-studies/scaling-fintech-40x.mdx`
-- `src/content/case-studies/second-cloud-gcp.mdx`
-- `src/content/case-studies/cloud-spend-45-percent.mdx`
-- `src/content/case-studies/ai-platform-foundations.mdx`
-- `src/content/blog/why-az-104-as-an-aws-veteran.md`
+- `src/content/case-studies/case-studies-xxx.mdx`
+- `src/content/blog/blog-xx.md`
 
 ### Replace the diagram placeholders
 
