@@ -1,0 +1,55 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import ProseLayout from '../../layouts/ProseLayout.astro';
+import SeriesBanner from '../../components/SeriesBanner.astro';
+import { getCoverImage } from '../../utils/coverImage';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+const formatted = entry.data.pubDate.toLocaleDateString('en-GB', {
+  year: 'numeric',
+  month: 'short',
+  day: '2-digit',
+});
+
+const cover = getCoverImage(entry.id);
+---
+
+<ProseLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  eyebrow="blog"
+  meta={formatted}
+>
+  {
+    cover && (
+      <Image
+        src={cover}
+        alt={entry.data.title}
+        class="not-prose mb-10 w-full rounded-lg border border-line"
+        widths={[400, 800, 1200]}
+        sizes="(min-width: 768px) 768px, 100vw"
+      />
+    )
+  }
+  {
+    entry.data.series && entry.data.part && (
+      <SeriesBanner
+        series={entry.data.series}
+        part={entry.data.part}
+        total={entry.data.seriesTotal}
+      />
+    )
+  }
+  <Content />
+</ProseLayout>

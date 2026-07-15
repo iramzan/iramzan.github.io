@@ -1,0 +1,34 @@
+---
+import { withBase } from '../utils/url';
+
+interface Props {
+  slug: string;
+  title: string;
+  summary: string;
+  metric?: string;
+  independent?: boolean;
+}
+
+const { slug, title, summary, metric, independent = false } = Astro.props;
+---
+
+<a
+  href={withBase(`/case-studies/${slug}/`)}
+  class="group flex h-full flex-col rounded-lg border border-line bg-surface p-6 transition-colors hover:border-accent"
+>
+  <div class="flex flex-wrap items-center gap-2">
+    {metric && <span class="font-mono text-xs text-accent">{metric}</span>}
+    {
+      independent && (
+        <span class="rounded border border-accent/40 bg-accent-tint px-1.5 py-0.5 font-mono text-[0.65rem] text-accent">
+          independent work
+        </span>
+      )
+    }
+  </div>
+  <h3 class="mt-2 text-lg font-semibold tracking-tight group-hover:text-accent">
+    {title}
+  </h3>
+  <p class="mt-2 flex-1 text-sm leading-relaxed text-muted">{summary}</p>
+  <p class="mt-4 font-mono text-xs text-muted group-hover:text-accent">read case study →</p>
+</a>

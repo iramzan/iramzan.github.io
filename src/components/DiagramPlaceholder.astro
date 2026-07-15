@@ -1,0 +1,40 @@
+---
+/**
+ * Placeholder for a real architecture diagram.
+ * Replace the whole <DiagramPlaceholder /> with an exported SVG/PNG when ready.
+ */
+interface Props {
+  description: string;
+}
+
+const { description } = Astro.props;
+---
+
+<figure class="not-prose my-8">
+  <div class="rounded-lg border border-dashed border-line bg-surface p-4">
+    <svg
+      viewBox="0 0 800 300"
+      class="h-auto w-full"
+      role="img"
+      aria-label={`Diagram placeholder: ${description}`}
+    >
+      <g class="text-line" stroke="currentColor" fill="none" stroke-width="1.5">
+        <rect x="70" y="80" width="170" height="64" rx="8"></rect>
+        <rect x="315" y="80" width="170" height="64" rx="8"></rect>
+        <rect x="560" y="80" width="170" height="64" rx="8"></rect>
+        <rect x="315" y="200" width="170" height="64" rx="8"></rect>
+        <path d="M240 112 H315 M485 112 H560 M400 144 V200"></path>
+      </g>
+      <text
+        x="400"
+        y="46"
+        text-anchor="middle"
+        class="fill-muted"
+        font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+        font-size="15">[DIAGRAM]</text>
+    </svg>
+    <figcaption class="mt-3 font-mono text-xs text-muted">
+      [DIAGRAM: {description}]
+    </figcaption>
+  </div>
+</figure>

@@ -1,0 +1,15 @@
+---
+import { SITE } from '../consts';
+---
+
+<footer class="border-t border-line">
+  <div
+    class="mx-auto flex w-full max-w-5xl flex-col items-start justify-between gap-3 px-6 py-8 text-sm text-muted sm:flex-row sm:items-center"
+  >
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+      <a href={`mailto:${SITE.email}`} class="hover:text-accent">{SITE.email}</a>
+      <a href={SITE.linkedin} rel="me noopener" target="_blank" class="hover:text-accent">LinkedIn</a>
+    </div>
+    <p class="font-mono text-xs">© 2026 {SITE.name}</p>
+  </div>
+</footer>

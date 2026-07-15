@@ -1,0 +1,85 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MetricCard from '../components/MetricCard.astro';
+import BlogPostCard from '../components/BlogPostCard.astro';
+import { SITE } from '../consts';
+import { withBase } from '../utils/url';
+import { getCoverImage } from '../utils/coverImage';
+
+const latestPosts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+---
+
+<BaseLayout>
+  <!-- Hero -->
+  <section class="mx-auto w-full max-w-5xl px-6 pb-14 pt-16 sm:pt-24">
+    <p class="eyebrow"># AI Infrastructure, Platform Engineering & Cloud Strategy — {SITE.location}</p>
+    <h1 class="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">{SITE.name}</h1>
+    <p class="mt-2 font-mono text-sm text-muted">{SITE.role} — {SITE.location}</p>
+
+    <p class="mt-7 max-w-3xl text-xl leading-relaxed sm:text-2xl">
+      I build and run the infrastructure AI workloads depend on — secure Kubernetes at scale,
+      multi-cloud platforms on AWS, Azure and GCP, and the FinOps discipline that keeps GPU and token
+      costs under control.
+    </p>
+
+    <p class="mt-5 max-w-3xl leading-relaxed text-muted">
+      21 years in technology across enterprise SaaS, fintech, and telecommunications. Currently
+      Head of DevOps at a fintech SaaS company, managing a $10M+ annual cloud budget and leading
+      a globally distributed team of 14 platform engineers while scaling throughput from 50 to
+      2,000+ TPS. Previously an AWS Premier Partner consultant delivering enterprise cloud
+      migrations for Tier 1 financial institutions.
+    </p>
+  </section>
+
+  <!-- Headline metrics -->
+  <section aria-label="Headline metrics" class="mx-auto w-full max-w-5xl px-6">
+    <div class="grid gap-4 sm:grid-cols-3">
+      <MetricCard
+        value="40×"
+        label="Throughput growth"
+        detail="On a production Kubernetes platform — 50 → 2,000+ TPS."
+      />
+      <MetricCard
+        value="~45%"
+        label="Cloud spend reduction"
+        detail="~$900K → ~$500K monthly, in first 2 years at CallSign."
+      />
+      <MetricCard
+        value="$10M+"
+        label="Annual budget owned"
+        detail="Multi-cloud budget ownership in a regulated fintech."
+      />
+    </div>
+  </section>
+
+  <!-- Latest writing -->
+  {
+    latestPosts.length > 0 && (
+      <section aria-label="Latest writing" class="mx-auto w-full max-w-5xl px-6 py-14 sm:py-20">
+        <div class="flex items-baseline justify-between gap-4">
+          <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">Latest writing</h2>
+          <a
+            href={withBase('/blog/')}
+            class="font-mono text-xs text-muted transition-colors hover:text-accent"
+          >
+            all posts →
+          </a>
+        </div>
+        <div class="mt-6 grid gap-4 sm:grid-cols-3">
+          {latestPosts.map((post) => (
+            <BlogPostCard
+              slug={post.id}
+              title={post.data.title}
+              description={post.data.description}
+              pubDate={post.data.pubDate}
+              cover={getCoverImage(post.id)}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>

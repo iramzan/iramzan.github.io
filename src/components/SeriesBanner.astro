@@ -1,0 +1,113 @@
+---
+/**
+ * SeriesBanner.astro — "Part X of N" banner for multi-part blog series.
+ *
+ * SETUP (3 steps):
+ *
+ * 1. Save this file to: src/components/SeriesBanner.astro
+ *
+ * 2. Add the series fields to your blog collection schema
+ *    (src/content.config.ts in Astro 5, or src/content/config.ts):
+ *
+ *      schema: z.object({
+ *        // ...your existing fields...
+ *        series: z.string().optional(),
+ *        part: z.number().optional(),
+ *        seriesTotal: z.number().optional(),
+ *      })
+ *
+ * 3. In your blog post layout / [...slug].astro page, render it under
+ *    the title (conditionally, so non-series posts are unaffected):
+ *
+ *      import SeriesBanner from '../components/SeriesBanner.astro';
+ *      ...
+ *      {post.data.series && post.data.part && (
+ *        <SeriesBanner
+ *          series={post.data.series}
+ *          part={post.data.part}
+ *          total={post.data.seriesTotal}
+ *        />
+ *      )}
+ *
+ * BEHAVIOUR:
+ * - Lists every part from 1..total. Parts whose posts exist in the
+ *   collection AND have pubDate <= build time render as links; future
+ *   or missing parts render as muted "coming soon" text. This means
+ *   you can commit all three articles up front and never hand-fix
+ *   forward links in the banner — it sorts itself out at build time.
+ * - Adjust COLLECTION and BASE_PATH below if your collection isn't
+ *   named "blog" or your posts don't live under /blog/.
+ */
+import { getCollection } from 'astro:content';
+
+interface Props {
+  series: string;
+  part: number;
+  total?: number;
+}
+
+const COLLECTION = 'blog';
+const BASE_PATH = '/blog';
+
+const { series, part, total } = Astro.props;
+
+const siblings = await getCollection(
+  COLLECTION,
+  (p: any) => p.data.series === series
+);
+
+const now = new Date();
+const seriesTotal =
+  total ?? Math.max(part, ...siblings.map((p: any) => p.data.part ?? 0));
+
+const slots = Array.from({ length: seriesTotal }, (_, i) => {
+  const n = i + 1;
+  const match = siblings.find((p: any) => p.data.part === n);
+  const isPublished = match && new Date(match.data.pubDate) <= now;
+  // Astro 5 content-layer collections use `id`; legacy collections use `slug`.
+  const slug = match ? ((match as any).slug ?? match.id) : null;
+  return {
+    n,
+    title: match?.data.title ?? null,
+    href: isPublished && slug ? `${BASE_PATH}/${slug}/` : null,
+    current: n === part,
+  };
+});
+---
+
+<aside
+  class="not-prose my-8 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-800/50"
+  aria-label={`Series: ${series}`}
+>
+  <p class="font-medium text-slate-900 dark:text-slate-100">
+    Part {part} of {seriesTotal} — {series}
+  </p>
+  <ol class="mt-2 space-y-1">
+    {
+      slots.map((s) => (
+        <li class="flex items-baseline gap-2">
+          <span class="text-slate-400 dark:text-slate-500">Part {s.n}.</span>
+          {s.current ? (
+            <span
+              class="font-semibold text-slate-900 dark:text-slate-100"
+              aria-current="page"
+            >
+              {s.title} (you are here)
+            </span>
+          ) : s.href ? (
+            <a
+              href={s.href}
+              class="text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
+            >
+              {s.title}
+            </a>
+          ) : (
+            <span class="italic text-slate-400 dark:text-slate-500">
+              coming soon
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</aside>
