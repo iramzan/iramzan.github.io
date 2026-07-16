@@ -39,3 +39,4 @@ Dynamic routes `src/pages/case-studies/[slug].astro` and `src/pages/blog/[slug].
 
 - `<mark>[EXPAND: ...]</mark>` marks unfinished sections in case studies/blog posts — rendered highlighted so they're impossible to miss. Don't remove these markers without also filling in the real content.
 - `<DiagramPlaceholder description="..." />` stands in for a real diagram; real diagrams go in `public/diagrams/` and replace the component with a standard Markdown image.
+- Blog post images live in `src/content/blog/<slug>-images/`. The header/cover image must be named `cover.{png,jpg,jpeg,webp}` — `src/utils/coverImage.ts` globs for it by folder name and `[slug].astro` renders it automatically above the content (no frontmatter field needed). Other in-article images go in the same folder with any descriptive filename, referenced from the post body via relative paths, e.g. `![alt](./slug-images/diagram.png)`.

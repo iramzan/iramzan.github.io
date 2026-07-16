@@ -1,0 +1,112 @@
+---
+title: "The Year We Stopped Asking AWS for EKS Extensions"
+description: "How EOL management across 20+ AWS environments went from a recurring crisis to a boring calendar entry — the playbook for getting off the extended-support treadmill for good."
+pubDate: 2026-07-16
+tags: ["AWS", "EKS", "Kubernetes", "Platform Engineering", "FinOps"]
+draft: false
+---
+
+import { Image } from 'astro:assets';
+import eksWeb from './02-eol-management-lessons-from-20-aws-environments-images/eks-dependency-web.png';
+import eolCalendar from './02-eol-management-lessons-from-20-aws-environments-images/eol-calendar-yearly-monthly.png';
+import fourStep from './02-eol-management-lessons-from-20-aws-environments-images/eol-four-step-process.png';
+
+*How end-of-life management across 20+ environments went from a recurring crisis to a boring calendar entry.*
+---
+When I took over a platform estate nobody handed me a document saying, "We have an end-of-life problem."
+
+Every managed service seemed to be on a different lifecycle. EKS clusters deep into extended support, an OpenSearch domain running a version AWS had stopped smiling about, Aurora MySQL closing in on a major version deadline, and ElastiCache (Redis) on a release old enough that the upgrade path itself needed research. Multiply that across 20+ environments, single-tenant and multi-tenant, spread over multiple regions, and you don't really have an upgrade backlog anymore. You have a treadmill running faster than you are.
+
+Everything looked healthy. Applications were running, deployments were working, and customers weren't complaining. Nothing was actually broken. Which was exactly why it kept losing to everything else on the list.
+
+The low point was familiar to anyone who has lived this: emailing our AWS account team, again, asking for more time on an EKS EOL extension. AWS was gracious. But when your platform strategy depends on a vendor's goodwill, you don't have a strategy. You have a hope.
+
+This is the story of how we got off that treadmill, and what I'd tell anyone staring at the same problem today.
+
+## The hidden cost of doing nothing
+
+One of the biggest misconceptions about end-of-life infrastructure is that it only becomes a problem when something breaks. In reality, the costs start much earlier.
+We had to reframe that thinking by highlighting the actual, compounding impact of staying behind:
+
+**It costs real money.** EKS extended support is priced at six times the standard cluster fee. That's AWS being polite about it — the price is a deliberate signal, not a revenue line. Across 20+ clusters, staying behind isn't free, it's a monthly invoice for the privilege of moving slowly, and Aurora and OpenSearch have their own extended support economics. The bill for procrastination arrives whether or not you budgeted for it.
+
+**The compounding debt of the platform layer.** Kubernetes versions don't age in isolation. Every time you delay an EKS upgrade, you're also freezing Karpenter, your AWS VPC CNI, your CSI storage drivers, the ALB controller, Kyverno, and every single Helm chart running in your platform layer. Every delayed upgrade makes the next one more complicated because Kubernetes isn't the only thing that changes. The cost of an upgrade grows non-linearly with how late you are.
+
+<Image
+  src={eksWeb}
+  alt="Diagram showing EKS at the centre connected to Karpenter, VPC CNI, CSI drivers, ALB controller, Kyverno, and Helm charts — illustrating how one delayed upgrade freezes the whole platform layer"
+  width={1000}
+  height={700}
+/>
+
+**It's a security and audit finding waiting to happen.** In a regulated environment, running software past end-of-support isn't a technical detail — it's an exception you have to document, justify, and explain to auditors, and that conversation gets harder every quarter you stay behind. It's probably the cheapest compliance control you'll ever implement.
+
+## Step one: pay off the debt before you design the process
+
+We resisted the temptation to build dashboards or governance processes first, and focused on clearing the technical debt by upgrading everything back to supported versions.
+
+We targeted our non-production environments first, using them as our integration tests to absorb the inevitable surprises before touching production. Because everything in our infrastructure was managed via Terraform and driven through GitOps, we could confidently repeat these upgrades across all 20+ environments through IaC, rather than manual, error-prone console sessions.  It was expensive in terms of team focus, and it took a couple of quarters of dedicated capacity. But it was a one-time payment to get out of debt.
+
+## Step two: one calendar, owned by one team
+
+Once the estate was current, we published a yearly EOL schedule — every managed service, every version in use, every AWS end-of-standard-support date, laid out twelve months ahead. Then we broke it down into a monthly execution plan: which environments upgrade in which month, in which order.
+
+<Image
+  src={eolCalendar}
+  alt="Yearly EOL calendar broken down into a monthly execution plan"
+  width={1000}
+  height={700}
+/>
+
+The tool we used to build the calendar mattered far less than the ownership. Before, EOL knowledge was scattered across random AWS emails and individual engineers' heads. Now, there was exactly one source of truth, owned by Platform Engineering. If an upgrade wasn't on that calendar, it was a gap in our planning—not an unexpected emergency.
+
+We also committed to a strict N-1 target for EKS. Kubernetes ships roughly three releases a year with about fourteen months of standard support each, and if you only upgrade when forced by EOL, every upgrade is an emergency. By tracking N-1, upgrades remain small, routine, and easily scheduled around our own business peaks rather than dictated by AWS's end of support clock.
+
+## Step three: let AWS tell you, automatically
+
+You cannot rely on manual dashboard checks. So we wired the AWS Health Dashboard into our notification pipeline — planned lifecycle events, deprecation notices, end-of-support announcements, all sent to NOC team automatically, per account, per region.
+
+That closed the unknown-unknowns gap. The yearly calendar covered everything we already knew about in January. Health Dashboard events covered whatever AWS announced in March. Between the two, nothing arrived as a surprise, which is a phrase that means a lot more once you've discovered an EOL date with six weeks' notice across twenty environments.
+
+## Step four: make EOL a first-class citizen in quarterly planning
+
+This was the organisational fix, and honestly the one that made the other three stick. Technical processes cannot survive a product roadmap that leaves no room for them.
+
+We brought the monthly EOL plan into quarterly planning with delivery and engineering leadership, and EOL work got booked as committed capacity. We stopped treating upgrades as "technical housekeeping" and presented them instead as a direct risk-mitigation and cost-saving effort. Once EOL work was expressed in money and risk instead of arbitrary version numbers, it stopped being a negotiation.
+
+The result: no more extension requests, no more emailing our account team asking for grace. Upgrades happened on a regular cadence, and on time.
+
+<Image
+  src={fourStep}
+  alt="Four-step process: pay off debt, one calendar, auto alerts, quarterly planning"
+  width={1200}
+  height={400}
+/>
+
+## What I'd recommend
+
+If you're inheriting, or currently sitting on top of, an estate with EOL debt, here's roughly the order I'd run this in:
+
+1. **Audit first, honestly.** Every service, every version, every end-of-support date, every environment. You can't plan around a picture you don't actually have, and it's usually worse than the handover notes let on.
+2. **Pay down the debt before you build the process.** A calendar for an estate that's already behind is just fiction. Take the one-time cost and be straight with leadership about what it displaces.
+3. **Upgrade non-production first, every single time.** It's the cheapest integration test you'll ever get. Sequence by blast radius and let each wave de-risk the next one.
+4. **Publish one calendar, owned by one team.** Yearly for planning, monthly for execution. Scattered knowledge is how deadlines get missed.
+5. **Automate the awareness.** Get Health Dashboard events into your alerting so deprecation notices find your team, instead of your team having to go hunting for them.
+6. **Track N-1, not end-of-life.** Frequent small upgrades on your own schedule beat rare large ones on the vendor's schedule.
+7. **Get EOL into quarterly planning as committed capacity.** And make the case in money and audit risk — that's the language that actually wins roadmap space.
+8. **Keep a compatibility matrix for your add-ons.** The Kubernetes version is never the whole upgrade. Knowing your Karpenter, controller, and policy-engine sequencing ahead of time is what separates a plan from an incident.
+
+## The boring ending is the point
+
+Today, end-of-life management is probably the least interesting thing our platform team does.
+
+And that is exactly how it should be.
+
+We don't ask AWS for EKS extensions anymore. Upgrades don't arrive as emergencies. Everyone knows what is coming six months in advance, and every environment follows the same predictable lifecycle.
+
+That is the outcome worth aiming for. Not a heroic migration story — a boring one. Platform engineering is not only about solving complex technical problems; it is equally about building the operational habits that prevent those problems from appearing in the first place.
+
+---
+
+*Imran Ramzan | 21 years leading cloud, platform engineering, and AI platform strategy.
+Drawing on real-world leadership and cloud engagements in the UAE and globally, I write about the realities of scaling platforms for the AI era. While I use AI tools to help shape and polish this content, the technical insights and opinions are entirely my own.*
