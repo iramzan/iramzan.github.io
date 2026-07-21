@@ -62,7 +62,7 @@ The economics work best in a sweet spot. If the refresh is too close — hardwar
 
 Done properly, the Assess phase ends with a rationalised inventory, a dependency map, a documented set of business drivers, a directional cost model anchored to the refresh cycle, and a stakeholder base that has already been forced to think hard about its own applications.
 
-In [Part 2](#), I'll cover the Mobilize phase: designing the landing zone, choosing the right migration treatment for every workload, planning migration waves — and why Microsoft workloads deserve their own strategy entirely.
+In [Part 2](/blog/mobilize-landing-zones-seven-rs-microsoft), I'll cover the Mobilize phase: designing the landing zone, choosing the right migration treatment for every workload, planning migration waves — and why Microsoft workloads deserve their own strategy entirely.
 
 ---
 
